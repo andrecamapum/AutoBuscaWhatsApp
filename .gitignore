@@ -1,0 +1,6 @@
+# .gitignore
+venv/           # Ambiente virtual
+__pycache__/    # Cache do Python
+.DS_Store       # Arquivos do macOS
+*.log           # Logs
+screenshots/    # Pasta de capturas (se for temporária)
