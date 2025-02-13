@@ -188,3 +188,56 @@ def maximize_whatsapp():
 move_whatsapp_to_largest_screen()
 time.sleep(1)  # Pequena pausa para evitar falhas
 maximize_whatsapp()
+
+# -----------------------------------------------------------------------------------------------------
+# Seleciona e Limpa e Insere termos na Barra de Pesquisa Global do Whatsapp (MacOs apenas)
+# -----------------------------------------------------------------------------------------------------  
+
+import pyautogui
+import pyperclip  # Biblioteca para manipular a área de transferência
+
+def limpar_e_escrever_na_barra_pesquisa(termo):
+    try:
+        # Aguarda alguns segundos para garantir que o WhatsApp está em foco
+        time.sleep(2)
+
+        # 1. Foca na barra de pesquisa usando o atalho Cmd + F (macOS)
+        pyautogui.hotkey('command', 'f')  # No Windows, use: pyautogui.hotkey('ctrl', 'f')
+        
+        # 2. Seleciona todo o texto na barra de pesquisa
+        pyautogui.hotkey('command', 'a')  # No macOS: Command + A (selecionar tudo)
+        # No Windows, use: pyautogui.hotkey('ctrl', 'a')
+
+        # 3. Apaga o texto selecionado
+        pyautogui.press('backspace')  # Apaga tudo o que estiver selecionado
+
+        # 4. Prepara o texto para colar
+        pyperclip.copy(termo)  # Copia o termo para a área de transferência
+
+        # 4.1. Aguarda alguns segundos para garantir que a o WhatsApp está em foco
+        time.sleep(0.5)
+
+        # 5. Foca novamente na barra de pesquisa (garantia extra)
+        pyautogui.hotkey('command', 'f')
+   
+        # 6. Cola o texto da área de transferência
+        pyautogui.hotkey('command', 'v')  # No macOS: Command + V (colar)
+        # No Windows, use: pyautogui.hotkey('ctrl', 'v')
+        
+        time.sleep(0.5)  # Aguarda a digitação ser concluída
+
+        print(f"Termo '{termo}' escrito na barra de pesquisa com sucesso!")
+    except Exception as e:
+        print(f"Erro ao interagir com a barra de pesquisa: {e}")
+
+# Teste da função
+limpar_e_escrever_na_barra_pesquisa("Teste: termo de busca")
+time.sleep(2)  # Aguarda 2 segundos antes da próxima ação
+limpar_e_escrever_na_barra_pesquisa("teste concluído")
+
+# -----------------------------------------------------------------------------------------------------
+# Aviso de conclusão do programa
+# -----------------------------------------------------------------------------------------------------  
+
+# Exemplo de uso:
+show_message("Busca por Listas no Whatsapp", "✅ Programa concluído com sucesso!\nVocê já pode voltar a operar o sistema normalmente!")
