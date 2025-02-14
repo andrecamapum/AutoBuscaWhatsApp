@@ -189,8 +189,11 @@ move_whatsapp_to_largest_screen()
 time.sleep(1)  # Pequena pausa para evitar falhas
 maximize_whatsapp()
 
+# Debuger:
+show_message("Busca por Listas no Whatsapp", "✅ WhatsApp maximizado e movido para o maior monitor disponível!")
+
 # -----------------------------------------------------------------------------------------------------
-# Seleciona e Limpa e Insere termos na Barra de Pesquisa Global do Whatsapp (MacOs apenas)
+# Seleciona, limpa e insere termos na Barra de Pesquisa Global do Whatsapp (MacOs apenas)
 # -----------------------------------------------------------------------------------------------------  
 
 import pyautogui
@@ -234,6 +237,47 @@ def limpar_e_escrever_na_barra_pesquisa(termo):
 limpar_e_escrever_na_barra_pesquisa("Teste: termo de busca")
 time.sleep(2)  # Aguarda 2 segundos antes da próxima ação
 limpar_e_escrever_na_barra_pesquisa("teste concluído")
+
+# -----------------------------------------------------------------------------------------------------
+#  Identifica e Captura o Painel de Pesquisa do WhatsApp (MacOs apenas)
+# -----------------------------------------------------------------------------------------------------
+
+# Salva as coordenadas para uso futuro (ex: em um arquivo de configuração)
+def salvar_coordenadas():
+    # Instruções para o usuário
+    print("Selecione a região do Painel de Pesquisa do Whatsapp (painel central) com o mouse...")
+    show_message("Busca por Listas no Whatsapp", "\u26A0\uFE0F Selecione a área do Painel de Pesquisa do Whatsapp (painel central) com o mouse...\nVocê só precisará fazer isso uma vez! ")
+    # Captura as coordenadas da seleção manual
+    regiao = pyautogui.selectRegion()
+    with open("config.txt", "w") as f:
+        f.write(f"{regiao.left},{regiao.top},{regiao.width},{regiao.height}")
+    print("Coordenadas salvas com sucesso!")
+    show_message("Busca por Listas no Whatsapp", "✅ Coordenadas salvas com sucesso!\n\u26A0\uFE0F Não modifique a janela do WhatsApp para não gerar erros de leitura!")
+# Carrega as coordenadas salvas (ex: de um arquivo de configuração)
+def carregar_coordenadas():
+    try:
+        with open("config.txt", "r") as f:
+            dados = f.read().split(',')
+            return (int(dados[0]), int(dados[1]), int(dados[2]), int(dados[3]))
+    except FileNotFoundError:
+        print("Erro: Arquivo 'config.txt' não encontrado. Execute a seleção manual primeiro.")
+        show_message("Busca por Listas no Whatsapp", "❌ Erro: Arquivo 'config.txt' não encontrado. Execute a seleção manual primeiro!")
+        return None
+
+# Captura o Painel Central com base nas coordenadas salvas
+def capturar_painel_b():
+    coordenadas = carregar_coordenadas()
+    if coordenadas:
+        x, y, largura, altura = coordenadas
+        screenshot = pyautogui.screenshot(region=(x, y, largura, altura))
+        screenshot.save(f"painel_b_{int(time.time())}.png")
+        print("Captura do Painel B concluída!")
+
+# Primeira execução (configuração):
+salvar_coordenadas()
+
+# Execuções seguintes (uso normal):
+capturar_painel_b()
 
 # -----------------------------------------------------------------------------------------------------
 # Aviso de conclusão do programa
