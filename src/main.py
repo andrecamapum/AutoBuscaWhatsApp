@@ -170,24 +170,46 @@ def move_whatsapp_to_largest_screen():
 # Maximiza a janela do Whatsappp para Desktop no maior monitor disponível (MacOs apenas)
 # -----------------------------------------------------------------------------------------------------    
 
+import pyautogui
+
 def maximize_whatsapp():
-    script = """
-    tell application "System Events"
-        tell process "WhatsApp"
-            if exists window 1 then
+    try:
+        script = '''
+        tell application "WhatsApp" to activate
+        delay 1
+        tell application "System Events"
+            tell process "WhatsApp"
                 set frontmost to true
                 set value of attribute "AXFullScreen" of window 1 to true
-            end if
+            end tell
         end tell
-    end tell
-    """
-    os.system(f"osascript -e '{script}'")
-    print("✅ WhatsApp maximizado.")
+        '''
+        result = subprocess.run(
+            ['osascript', '-e', script],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        # Verifica se houve mensagem de erro no output
+        if result.stderr:
+            print(f"❌ Erro do AppleScript: {result.stderr}")
+        else:
+            print("✅ WhatsApp maximizado com sucesso via AppleScript!")
 
-# Executa a movimentação e maximização
-move_whatsapp_to_largest_screen()
-time.sleep(1)  # Pequena pausa para evitar falhas
-maximize_whatsapp()
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Falha técnica:")
+        print(f"Código de erro: {e.returncode}")
+        print(f"Mensagem: {e.output}")
+        print(f"Detalhes: {e.stderr}")
+
+    except Exception as e:
+        print(f"❌ Erro inesperado: {str(e)}")
+
+# Execução
+move_whatsapp_to_largest_screen()  # Move o WhatsApp para o maior monitor
+time.sleep(3)  # Pequeno delay para garantir que o foco foi aplicado
+maximize_whatsapp()  # Maximiza a janela
 
 # Debuger:
 show_message("Busca por Listas no Whatsapp", "✅ WhatsApp maximizado e movido para o maior monitor disponível!")
@@ -196,7 +218,6 @@ show_message("Busca por Listas no Whatsapp", "✅ WhatsApp maximizado e movido p
 # Seleciona, limpa e insere termos na Barra de Pesquisa Global do Whatsapp (MacOs apenas)
 # -----------------------------------------------------------------------------------------------------  
 
-import pyautogui
 import pyperclip  # Biblioteca para manipular a área de transferência
 
 def limpar_e_escrever_na_barra_pesquisa(termo):
@@ -242,29 +263,79 @@ limpar_e_escrever_na_barra_pesquisa("teste concluído")
 #  Identifica e Captura o Painel de Pesquisa do WhatsApp (MacOs apenas)
 # -----------------------------------------------------------------------------------------------------
 
+# ------------------------------------------------
+# Função para exibir mensagens ao usuário
+# ------------------------------------------------
+def show_message(title, message):
+    if platform.system() == 'Darwin':  # macOS
+        script = f'display dialog "{message}" with title "{title}" buttons {{"OK"}}'
+        subprocess.run(['osascript', '-e', script])
+    else:  # Windows/Linux
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showinfo(title, message)
+        root.destroy()
+
+# ------------------------------------------------
 # Salva as coordenadas para uso futuro (ex: em um arquivo de configuração)
+# ------------------------------------------------
 def salvar_coordenadas():
     # Instruções para o usuário
     print("Selecione a região do Painel de Pesquisa do Whatsapp (painel central) com o mouse...")
     show_message("Busca por Listas no Whatsapp", "\u26A0\uFE0F Selecione a área do Painel de Pesquisa do Whatsapp (painel central) com o mouse...\nVocê só precisará fazer isso uma vez! ")
+
+    # Exibe uma imagem de referência antes da seleção
+    imagem_exemplo = "referencia_painel_b.png"
+    if os.path.exists(imagem_exemplo):
+        img = tk.Tk()
+        img.title("Exemplo de Seleção")
+        img.geometry("400x400")
+        img_label = tk.Label(img, text="Veja a imagem abaixo e clique para continuar:")
+        img_label.pack()
+        img_canvas = tk.Canvas(img, width=400, height=350)
+        img_canvas.pack()
+        img_ref = tk.PhotoImage(file=imagem_exemplo)
+        img_canvas.create_image(200, 175, image=img_ref)
+        img.after(5000, img.destroy)  # Fecha após 5 segundos
+        img.mainloop()
+
     # Captura as coordenadas da seleção manual
     regiao = pyautogui.selectRegion()
+    
+    if regiao is None:
+        show_message("Erro", "❌ Nenhuma região foi selecionada. Tente novamente.")
+        return salvar_coordenadas()  # Chama a função novamente para refazer a seleção
+
     with open("config.txt", "w") as f:
         f.write(f"{regiao.left},{regiao.top},{regiao.width},{regiao.height}")
+    
     print("Coordenadas salvas com sucesso!")
     show_message("Busca por Listas no Whatsapp", "✅ Coordenadas salvas com sucesso!\n\u26A0\uFE0F Não modifique a janela do WhatsApp para não gerar erros de leitura!")
+
+# ------------------------------------------------
 # Carrega as coordenadas salvas (ex: de um arquivo de configuração)
+# ------------------------------------------------
 def carregar_coordenadas():
     try:
         with open("config.txt", "r") as f:
             dados = f.read().split(',')
             return (int(dados[0]), int(dados[1]), int(dados[2]), int(dados[3]))
     except FileNotFoundError:
-        print("Erro: Arquivo 'config.txt' não encontrado. Execute a seleção manual primeiro.")
-        show_message("Busca por Listas no Whatsapp", "❌ Erro: Arquivo 'config.txt' não encontrado. Execute a seleção manual primeiro!")
+        show_message("Erro", "❌ Arquivo 'config.txt' não encontrado.")
+        resposta = messagebox.askyesno("Configuração Necessária", "Deseja selecionar a área agora?")
+        if resposta:
+            salvar_coordenadas()
+            return carregar_coordenadas()  # Tenta carregar novamente após salvar
+        else:
+            show_message("Erro", "Programa encerrado.")
+            exit()  # Finaliza o programa
+    except Exception as e:
+        show_message("Erro", f"❌ Erro ao carregar coordenadas: {str(e)}")
         return None
 
+# ------------------------------------------------
 # Captura o Painel Central com base nas coordenadas salvas
+# ------------------------------------------------
 def capturar_painel_b():
     coordenadas = carregar_coordenadas()
     if coordenadas:
@@ -273,10 +344,14 @@ def capturar_painel_b():
         screenshot.save(f"painel_b_{int(time.time())}.png")
         print("Captura do Painel B concluída!")
 
+# ------------------------------------------------
 # Primeira execução (configuração):
+# ------------------------------------------------
 salvar_coordenadas()
 
+# ------------------------------------------------
 # Execuções seguintes (uso normal):
+# ------------------------------------------------
 capturar_painel_b()
 
 # -----------------------------------------------------------------------------------------------------
