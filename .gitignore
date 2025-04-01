@@ -1,6 +1,34 @@
 # .gitignore
-venv/           # Ambiente virtual
-__pycache__/    # Cache do Python
-.DS_Store       # Arquivos do macOS
-*.log           # Logs
-screenshots/    # Pasta de capturas (se for temporária)
+
+# Ignorar o ambiente virtual
+venv/
+
+# Ignorar cache do Python
+__pycache__/
+
+# Ignorar arquivos específicos do macOS
+.DS_Store
+
+# Ignorar logs
+*.log
+logs/
+
+# Ignorar configurações locais do VS Code
+.vscode/
+
+# Ignorar arquivos temporários
+data/Temp/
+data/debug_log.json
+src/debug_log.json
+debug_log.json
+
+# Ignorar binários e compilados do Python
+*.pyc
+*.pyo
+
+# Ignorar capturas de tela (se existirem)
+# screenshots/
+
+# Ignorar OCR de capturas de tela (se existirem)
+# OCR/
+
